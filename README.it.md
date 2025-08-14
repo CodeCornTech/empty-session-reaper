@@ -1,7 +1,11 @@
+# 🇮🇹 README (IT) — **`README.it.md`**
+
+---
+
 # @codecorn/empty-session-reaper
 
-Tiny middleware to **prune _or debug_ empty sessions** (cookie-only + your rules) and keep Prisma/Redis stores lean.  
-**Agnostic core** — no app-specific keys inside. Bring your own policy via options.
+Middleware leggero per **potare _o debuggare_ le sessioni vuote** (solo cookie + le tue regole) e mantenere snelli gli store Prisma/Redis.  
+**Core agnostico** — nessuna chiave applicativa all’interno. Porta tu la policy via opzioni.
 
 <p align="right">
   <a href="https://www.npmjs.com/package/@codecorn/empty-session-reaper">
@@ -20,7 +24,7 @@ Tiny middleware to **prune _or debug_ empty sessions** (cookie-only + your rules
     <img alt="CI" src="https://github.com/CodeCornTech/empty-session-reaper/actions/workflows/test.yml/badge.svg">
   </a>
   <a href="https://codecov.io/gh/CodeCornTech/empty-session-reaper">
-    <img alt="coverage umbrella" src="https://img.shields.io/badge/coverage-umbrella-9cf?logo=umbrella&logoColor=white">
+    <img alt="coverage umbrella" src="https://img.shields.io/badge/copertura-ombrello-9cf?logo=umbrella&logoColor=white">
   </a>
   <a href="LICENSE">
     <img alt="license" src="https://img.shields.io/github/license/CodeCornTech/empty-session-reaper">
@@ -29,25 +33,25 @@ Tiny middleware to **prune _or debug_ empty sessions** (cookie-only + your rules
 
 ---
 
-## Features
+## Caratteristiche
 
-- 🧹 **Prune** sessions that are “empty” under **your** rules.
-- 🔎 **Debug** with dry-run + logger; optional session **mutation logger**.
-- 🧩 **Agnostic**: pass allowlists, predicates, denylists — no hardcoded keys.
-- 🧪 **Store-agnostic**: Prisma/SQL, Redis, etc.
-- ⚙️ **Composable predicates** (`emptyObject`, `equals`, `oneOf`, `and`, `or`, `flashEmptyOrOneOf`).
-- 🧰 **Optional preset**: `cookieFlash()` — beginner-friendly.
-- 🧯 **Safe by design**: no env access, tiny footprint.
+- 🧹 **Pota** le sessioni “vuote” secondo **le tue** regole.
+- 🔎 **Debug** con dry-run + logger; **logger di mutazioni** opzionale.
+- 🧩 **Agnostico**: allowlist, predicate e denylist — nessuna chiave hardcoded.
+- 🧪 **Indipendente dallo store**: Prisma/SQL, Redis, ecc.
+- ⚙️ **Predicate componibili** (`emptyObject`, `equals`, `oneOf`, `and`, `or`, `flashEmptyOrOneOf`).
+- 🧰 **Preset opzionale**: `cookieFlash()` — avvio rapido.
+- 🧯 **Safe**: niente env, footprint minimo.
 
 ---
 
-## Install
+## Installazione
 
 ```bash
 npm i @codecorn/empty-session-reaper
 ```
 
-### Import styles
+### Import
 
 ```js
 // ✅ CommonJS (require)
@@ -55,7 +59,7 @@ const {
   wireEmptySessionReaper,
   predicates,
   buildAllowedKeys,
-  wireSessionMutationLogger, // optional: logs added/removed keys
+  wireSessionMutationLogger, // opzionale
 } = require("@codecorn/empty-session-reaper");
 const { cookieFlash } = require("@codecorn/empty-session-reaper/presets");
 ```
@@ -66,37 +70,33 @@ import {
   wireEmptySessionReaper,
   predicates as P,
   buildAllowedKeys,
-  wireSessionMutationLogger, // optional
+  wireSessionMutationLogger, // opzionale
 } from "@codecorn/empty-session-reaper";
 import { cookieFlash } from "@codecorn/empty-session-reaper/presets";
 ```
 
 ---
 
-## Usage A — minimal “cookie + empty flash”
+## Uso A — “cookie + flash vuoto” (base)
 
 ```ts
-// Meaning of buildAllowedKeys(input, expandBase, base):
-// - base: starting list (default: ['cookie'])
-// - input: extra keys to allow (e.g., ['flash'])
+// Significato di buildAllowedKeys(input, expandBase, base):
+// - base: lista iniziale (default: ['cookie'])
+// - input: chiavi extra consentite (es. ['flash'])
 // - expandBase:
-//     true  => merge base + input  (e.g., ['cookie'] + ['flash'] -> ['cookie','flash'])
-//     false => use input only      (e.g., ['flash'])
+//     true  => unisce base + input  (['cookie'] + ['flash'] -> ['cookie','flash'])
+//     false => usa solo input       (['flash'])
 wireEmptySessionReaper(app, {
   logger: (m, meta) => console.debug(m, meta),
 
   allowedKeys: buildAllowedKeys(["flash"], true, ["cookie"]),
-  // ↑ allowlist = merge base ['cookie'] + ['flash'] → ['cookie','flash']
   maxKeys: 2,
 
-  keyPredicates: {
-    // flash is harmless if it's an empty object {}
-    flash: P.emptyObject,
-  },
+  keyPredicates: { flash: P.emptyObject }, // flash innocuo se {}
 });
 ```
 
-## Usage B — advanced custom policy (full control)
+## Uso B — policy avanzata (massimo controllo)
 
 ```ts
 const isLoginFlash = (flash: any) => {
@@ -128,9 +128,10 @@ wireEmptySessionReaper(app, {
 });
 ```
 
-## Usage C — optional preset `cookieFlash`
+## Uso C — preset opzionale `cookieFlash`
 
 ```ts
+// cookie + flash: flash è {} OPPURE un messaggio ammesso (default: "Please sign in.")
 const preset = cookieFlash({
   // flashKey: 'flash',
   // flashField: 'error',
@@ -146,19 +147,19 @@ wireEmptySessionReaper(app, { logger: console.debug, ...preset });
 
 ---
 
-## Bonus: Session mutation logger (discover origins)
+## Bonus: Logger di mutazioni (capire l’origine)
 
 ```ts
-// Place AFTER session(...) and BEFORE the reaper:
+// Subito dopo session(...) e prima del reaper:
 wireSessionMutationLogger(app, {
   logger: (label, meta) => console.debug(label, meta),
-  includeValues: false, // true to also log shallow values (use redact to mask)
+  includeValues: false, // true per loggare anche i valori (usa redact per mascherarli)
   redact: (k, v) => (/(token|secret|pass)/i.test(k) ? "[redacted]" : v),
-  label: "session mutation",
+  label: "mutazione sessione",
 });
 ```
 
-> Logs `{ path, added: [...], removed: [...] }` on each response where the session keys changed.
+> Logga `{ path, added: [...], removed: [...] }` quando le chiavi di sessione cambiano.
 
 ---
 
@@ -166,18 +167,11 @@ wireSessionMutationLogger(app, {
 
 ```txt
 createEmptySessionReaper(opts) -> (req, res, next) => void
-  Create the middleware with your pruning policy.
-
 wireEmptySessionReaper(app, opts) -> middleware
-  Mounts the middleware on the app and returns it.
-
 buildAllowedKeys(input?: string[], expandBase?: boolean, base?: string[]) -> string[]
-  Helper to compose allowlists.
-  - base: starting list (default: ["cookie"])
-  - input: extra allowed keys (e.g., ["flash"])
-  - expandBase:
-      true  -> merge base + input
-      false -> use input only
+  - base: lista iniziale (default: ["cookie"])
+  - input: chiavi extra ammesse (es. ["flash"])
+  - expandBase: true = unisci; false = usa solo input
 
 predicates:
   - emptyObject(v)
@@ -189,20 +183,14 @@ predicates:
 
 createSessionMutationLogger(opts) -> middleware
 wireSessionMutationLogger(app, opts) -> middleware
-lookUpSessMutation(app, opts) -> alias of wireSessionMutationLogger
+lookUpSessMutation(app, opts) -> alias di wireSessionMutationLogger
 ```
 
 ---
 
-## 📝 License
+## Crediti
 
-MIT © [CodeCorn™](https://codecorn.it)
-
-Distributed under the [MIT](LICENSE) license.
-
-## Credits
-
-- **Cousìn (co-author & review)** — _PYTORCHIA FOR LIFE_
+- **Cugggì (co-author & review)** — _PYTORCHIA FOR LIFE_
 - **Federico Girolami (CodeCorn)** — Maintainer
 
 ---
@@ -230,10 +218,16 @@ Distributed under the [MIT](LICENSE) license.
 
 ---
 
-### 🤝 Contribute
+## 📝 License
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you’d like to change.
+MIT © [CodeCorn™](https://codecorn.it)
 
-> Powered by CodeCorn™ 🚀
+Distribuito sotto licenza [MIT](LICENSE).
 
 ---
+
+### 🤝 Contribuisci
+
+Pull request benvenute. Per grosse modifiche apri una issue prima di iniziare.
+
+> Powered by CodeCorn™ 🚀
