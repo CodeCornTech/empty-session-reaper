@@ -12,7 +12,8 @@ permissions:
 jobs:
   build:
     name: build / node ${{ matrix.node }}
-    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS, X64]
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +62,8 @@ jobs:
 
   audit:
     name: audit (high+)
-    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, macOS, X64]
     continue-on-error: true   # non blocca le PR se ci sono advisory transitive
     steps:
       - uses: actions/checkout@v4
